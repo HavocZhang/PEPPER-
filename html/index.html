@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport"content="initial-scale = 1.333,minimum-scale = 1.333,maximum-scale = 1.333" />
+<script src="JavaScript/jquery-2.1.4.min.js"></script>
+<script src="JavaScript/robotutils.js"></script>
+</head>
+<body>
+
+<h1>我的第一个标题</h1>
+<p>我的第一个段落。</p>
+<button id="test" type="button">你好世界</button>
+<button id="test1" type="button">跳舞</button>
+    <script>
+    var TRANSLATION={
+                        "facecamera": { "French": "Placez le code devant la caméra",
+                                        "English":"Show the barcode to the camera" },
+                        "barcode": { "French": "Code :",
+                                     "English":"Code:" },
+                        "title": { "French": "Titre :",
+                                   "English":"Title:" },
+                        "images": { "French": "Images :",
+                                    "English":"Images:" },
+                        "text": { "French": "Texte description :",
+                                  "English":"Text on web page:" },
+                        "speech": { "French": "Discours de Pepper :",
+                                    "English":"Pepper speech:" },
+                        "price": { "French": "Prix :",
+                                   "English":"Price:" },
+                        "save": { "French": "Enregistrer",
+                                  "English":"Save" }
+                   };
+                        
+    $(document).ready(function(){
+
+        session.then(   
+            function(session) { 
+                console.log('连接机器人成功'); 
+            },
+            function() {
+                console.error('连接机器人失败');
+                stateChanged();
+            }
+        );
+        // Load translations
+        session.service("ALTextToSpeech").then( function(tts) {
+            tts.getLanguage().then(function(lang) {
+                $(".totranslate").each( function(id, element){ 
+                    var element_id = element.id;
+                    if(TRANSLATION[element_id]) {
+                        if(TRANSLATION[element_id][lang]) {
+                            $("#"+element_id).text(TRANSLATION[element_id][lang]);
+                        }
+                    } else {
+                        $("#"+element_id).text("#"+lang+" missing#");
+                    }
+                });
+            });
+            $("#test").click(function(){
+                tts.say("你好，世界")
+            });
+        });
+        //摸头触发事件
+        session.service("ALMemory").then(function (ALMemory) {
+            ALMemory.subscriber("FrontTactilTouched").then(function (subscriber) {
+            // subscriber.signal is a signal associated to "FrontTactilTouched"
+                subscriber.signal.connect(function (state) {
+                console.log(state == 1 ? "You just touched my head!" : "Bye bye!");
+                });
+            });
+        });
+        //运行一个app
+        session.service("ALBehaviorManager").then(function(Behavior){
+            $("#test1").click(function(){
+                Behavior.startBehavior("fubot_date_dance")
+            });
+            session.service("ALMemory").then(function (ALMemory) {
+                ALMemory.subscriber("FrontTactilTouched").then(function (subscriber) {
+                    // subscriber.signal is a signal associated to "FrontTactilTouched"
+                    subscriber.signal.connect(function (state) {
+                    console.log(state == 1 ? Behavior.stopAllBehaviors() : "关闭程序");
+                    });
+                });
+            });
+        });
+
+      });
+
+  </script> 
+</body>
+</html>
